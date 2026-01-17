@@ -200,6 +200,4 @@ python scripts/generate_report.py --input experiments/ --output reports/
 - [原始代码分析](CODE_ANALYSIS.md)
 - [完整项目指南](README_PROJECT.md)
 
-**预计收益**: 定位精度提升 **20-35%**, 系统鲁棒性显著增强
 
-🎉 **祝你研究顺利！**

@@ -453,9 +453,363 @@ pip install -r requirements.txt
 5. **EVO工具**
    - Grupp, M. (2017). "EVO: Python package for the evaluation of odometry and SLAM"
 
+## 🌐 关键代码仓库与参考
+
+### 核心框架与项目
+
+```markdown
+## 主要参考仓库
+
+### 1. LVI-SAM 官方框架
+- **仓库**: https://github.com/TixiaoShan/LVI-SAM
+- **发表**: ICRA 2021
+- **核心**: 紧耦合LiDAR-视觉-惯性SLAM系统
+- **语言**: C++
+- **依赖**: ROS, GTSAM, Ceres, OpenCV
+
+### 2. LVI-SAM-Easyused (本项目核心参考)
+- **仓库**: https://github.com/NeSC-IV/LVI-SAM-Easyused
+- **分支**: `new` 分支（推荐使用）
+- **改进**: 修复了外参配置混乱，集成了最新LIO-SAM版本
+- **优势**:
+  - 简化了传感器外参配置流程
+  - 修复了原始LVI-SAM中存在的Bug
+  - 支持多种数据集配置
+  - 完整的参数配置示例
+
+### 3. 相关基础框架
+- **LIO-SAM**: https://github.com/TixiaoShan/LIO-SAM
+  - LiDAR-惯性里程计，是LVI-SAM的激光里程计模块基础
+- **ORB-SLAM2**: https://github.com/UZ-SLAM/ORB_SLAM2
+  - 视觉SLAM参考实现
+- **VINS-Mono**: https://github.com/HKUST-Aerial-Robotics/VINS-Mono
+  - 单目视觉-惯性系统参考
+
 ---
 
-## 📞 获取帮助
+## 💻 环境配置参考
+
+根据LVI-SAM-Easyused官方指南，推荐配置：
+
+### 操作系统与基础库
+```bash
+# 操作系统: Ubuntu 20.04
+# ROS版本: ROS Noetic
+# 其他库:
+  - OpenCV 4.0.* 
+  - GTSAM 4.0.*
+  - Ceres 1.14.*
+  - Eigen3
+```
+
+### 编译步骤
+```bash
+# 创建工作空间
+mkdir -p ~/lvi-sam/src
+cd ~/lvi-sam/src
+
+# 克隆代码（推荐使用 new 分支）
+git clone -b new https://github.com/NeSC-IV/LVI-SAM-Easyused.git
+# 或克隆官方版本
+git clone https://github.com/TixiaoShan/LVI-SAM.git
+
+# 编译
+cd ~/lvi-sam
+catkin_make
+```
+
+### 核心配置文件
+
+#### 1. 传感器外参配置 (`params_camera.yaml`)
+```yaml
+# Camera-IMU 外参 (T_imu_camera)
+# 相机相对于IMU的旋转矩阵
+extrinsicRotation: !!opencv-matrix
+   rows: 3
+   cols: 3
+   dt: d
+   data: [ 0,    0,    -1, 
+           -1,     0,    0, 
+            0,     1,    0]
+
+# 相机相对于IMU的位移向量
+extrinsicTranslation: !!opencv-matrix
+   rows: 3
+   cols: 1
+   dt: d
+   data: [0.006422381632411965, 0.019939800449065116, 0.03364235163589248]
+```
+
+#### 2. LiDAR外参配置 (`params_lidar.yaml`)
+```yaml
+# LiDAR-IMU 外参 (T_imu_lidar)
+extrinsicRotation: [-1,   0,    0, 
+                     0,    1,    0, 
+                     0,    0,   -1]
+extrinsicTranslation: [0.0, 0.0, 0.0]
+```
+
+#### 3. IMU属性配置
+```yaml
+# IMU坐标系定义（绕哪个轴逆时针旋转得到正欧拉角）
+# 对于大多数IMU设置为："+z", "+y", "+x"
+yawAxis: "+z"      # Yaw轴
+pitchAxis: "+y"    # Pitch轴  
+rollAxis: "+x"     # Roll轴
+```
+
+### 运行系统
+
+```bash
+# 加载环境变量
+source ~/lvi-sam/devel/setup.bash
+
+# 启动LVI-SAM系统（使用Husky配置）
+roslaunch lvi_sam Husky.launch
+
+# 在另一个终端播放数据包
+rosbag play your_data.bag
+```
+
+### 评估与验证
+
+```bash
+# 1. 安装EVO工具
+pip install evo --upgrade --no-binary evo
+
+# 2. 转换点云格式（如需要）
+python pcd2tum.py
+
+# 3. 计算轨迹误差
+# -r full: 包括旋转和平移
+# -va: 显示详细信息
+evo_ape tum gt.txt lvisam.txt -r full -va --plot --plot_mode xy --save_plot
+
+# 4. 多轨迹对比
+evo_traj tum trajectory1.txt trajectory2.txt --ref=gt.txt -va -p --plot_mode=xy --save_plot
+```
+
+### 支持的数据集配置
+
+#### 官方LVI-SAM数据集
+```bash
+roslaunch lvi_sam run.launch
+rosbag play handheld.bag
+```
+
+#### M2DGR Dataset
+```bash
+roslaunch lvi_sam M2DGR.launch
+rosbag play gate_01.bag
+```
+
+#### UrbanNav Dataset
+```bash
+roslaunch lvi_sam UrbanNavDataset.launch
+rosbag play 2020-03-14-16-45-35.bag
+```
+
+#### KITTI Raw Dataset
+```bash
+roslaunch lvi_sam KITTI.launch
+rosbag play kitti_2011_09_26_drive_0084_synced.bag
+```
+
+#### KAIST Complex Urban Dataset
+```bash
+roslaunch lvi_sam KAIST.launch
+rosbag play urban26.bag
+```
+
+---
+
+## 📚 关键参考文献
+
+### 学术论文与完整BibTeX格式
+
+```bibtex
+@inproceedings{shan2021lvi,
+  title={LVI-SAM: Tightly-coupled Lidar-Visual-Inertial Odometry and Mapping},
+  author={Shan, Tixiao and Englot, Brendan and Forster, Dariush and Meyers, Kyle and Wang, Devansh and Duarte, Carlos and Ratti, Carlo},
+  booktitle={IEEE International Conference on Robotics and Automation (ICRA)},
+  pages={7482--7488},
+  year={2021},
+  organization={IEEE}
+}
+
+@inproceedings{shan2020liosam,
+  title={LIO-SAM: Tightly-synchronized Lidar Inertial Odometry and Mapping},
+  author={Shan, Tixiao and Englot, Brendan and Meyers, Kyle and Wang, Devansh and Ratti, Carlo and Rus, Daniela},
+  booktitle={2020 IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS)},
+  pages={5016--5023},
+  year={2020},
+  organization={IEEE}
+}
+```
+
+### 特征跟踪算法
+
+```bibtex
+@inproceedings{rublee2011orb,
+  title={ORB: An Efficient Alternative to SIFT or SURF},
+  author={Rublee, Ethan and Rabaud, Vincent and Konolige, Kurt and Bradski, Gary},
+  booktitle={2011 International Conference on Computer Vision (ICCV)},
+  pages={2564--2571},
+  year={2011},
+  organization={IEEE}
+}
+
+@article{lucas1981iterative,
+  title={An Iterative Image Registration Technique with an Application to Stereo Vision},
+  author={Lucas, Bruce D and Kanade, Takeo},
+  journal={IJCAI},
+  volume={81},
+  pages={674--679},
+  year={1981}
+}
+
+@inproceedings{desuperpoint,
+  title={SuperPoint: Self-Supervised Interest Point Detection and Description},
+  author={DeTone, Daniel and Malisiewicz, Tomasz and Rabinovich, Andrew},
+  booktitle={2018 IEEE/CVF Conference on Computer Vision and Pattern Recognition Workshops (CVPRW)},
+  pages={224--236},
+  year={2018},
+  organization={IEEE}
+}
+```
+
+### 点云处理与配准
+
+```bibtex
+@article{besl1992method,
+  title={Method for Registration of 3-D Shapes},
+  author={Besl, Paul J and McKay, Neil D},
+  journal={IEEE Transactions on Pattern Analysis and Machine Intelligence},
+  volume={14},
+  number={2},
+  pages={239--256},
+  year={1992},
+  publisher={IEEE}
+}
+
+@inproceedings{biber2003normal,
+  title={The Normal Distributions Transform: A New Approach to Laser Scan Matching},
+  author={Biber, Peter and Straßer, Wolfgang},
+  booktitle={Proceedings of the 2003 IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS 2003)},
+  volume={3},
+  pages={2743--2748},
+  year={2003},
+  organization={IEEE}
+}
+
+@inproceedings{generalizedicp,
+  title={Generalized-ICP},
+  author={Segal, Aleksandr V and Haehnel, Dirk and Thrun, Sebastian},
+  booktitle={Robotics: Science and Systems},
+  volume={2},
+  pages={435},
+  year={2009}
+}
+```
+
+### 深度学习方法
+
+```bibtex
+@inproceedings{siamese2015,
+  title={Siamese Neural Networks for One-shot Image Recognition},
+  author={Koch, Gregory and Zemel, Richard and Salakhutdinov, Ruslan},
+  booktitle={ICML Deep Learning Workshop},
+  year={2015}
+}
+
+@article{resnet2015,
+  title={Deep Residual Learning for Image Recognition},
+  author={He, Kaiming and Zhang, Xiangyu and Ren, Shaoqing and Sun, Jian},
+  journal={arXiv preprint arXiv:1512.03385},
+  year={2015}
+}
+
+@inproceedings{he2016deep,
+  title={Deep Learning for Generic Object Detection: A Survey},
+  author={He, Kaiming and Gkioxari, Georgia and Dollar, Piotr and Girshick, Ross},
+  booktitle={2015 IEEE International Conference on Computer Vision (ICCV)},
+  pages={2395--2403},
+  year={2015},
+  organization={IEEE}
+}
+
+@inproceedings{mobilenet2017,
+  title={MobileNets: Efficient Convolutional Neural Networks for Mobile Vision Applications},
+  author={Howard, Andrew G and Zhu, Mengxi and Chen, Bo and Kalenichenko, Dmitry and Wang, Weijing and Weyand, Tobias and Andreetto, Marco and Adam, Hartwig},
+  booktitle={2017 IEEE Conference on Computer Vision and Pattern Recognition (CVPR)},
+  pages={4234--4243},
+  year={2017},
+  organization={IEEE}
+}
+```
+
+### 视觉SLAM基础
+
+```bibtex
+@article{orbslam2,
+  title={ORB-SLAM2: An Open-Source SLAM System for Monocular, Stereo, and RGB-D Cameras},
+  author={Mur-Artal, Ra{\'u}l and Tard{\'o}s, Juan D},
+  journal={IEEE Transactions on Robotics},
+  volume={33},
+  number={5},
+  pages={1255--1262},
+  year={2017},
+  publisher={IEEE}
+}
+
+@inproceedings{vinsmonorig,
+  title={VINS-Mono: A Robust and Versatile Monocular Visual-Inertial State Estimator},
+  author={Qin, Tong and Li, Peiliang and Shen, Shaojun},
+  booktitle={IEEE Transactions on Robotics},
+  volume={34},
+  number={4},
+  pages={1004--1020},
+  year={2018},
+  publisher={IEEE}
+}
+
+@inproceedings{dso2018,
+  title={Direct Sparse Odometry},
+  author={Wang, Rui and Schwörer, Martin and Cremers, Daniel},
+  booktitle={IEEE International Conference on Computer Vision (ICCV)},
+  pages={373--382},
+  year={2017},
+  organization={IEEE}
+}
+```
+
+### 评估与基准
+
+```bibtex
+@techreport{geiger2012kitti,
+  title={Vision meets Robotics: The KITTI Dataset},
+  author={Geiger, Andreas and Lenz, Philip and Stiller, Christoph and Urtasun, Raquel},
+  journal={International Journal of Robotics Research},
+  year={2013}
+}
+
+@article{evo2017,
+  title={EVO: Accurate and Open Source ROS Trajectory Evaluation Tool},
+  author={Grupp, Michael},
+  year={2017},
+  url={https://github.com/MichaelGrupp/evo}
+}
+
+@inproceedings{ate2009,
+  title={Accurate Real-time Localization of an Articulated Surgical Instrument using Kinematic and Optical Markers},
+  author={Lepetit, Vincent and Fua, Pascal},
+  booktitle={International Symposium on Computer Vision},
+  year={2006}
+}
+```
+
+---
+
 
 ### 常见问题
 
@@ -471,31 +825,4 @@ A: 确保轨迹文件格式正确（TUM格式），时间戳单调递增
 **Q: 网络训练很慢？**
 A: 启用GPU加速，检查CUDA可用性：`python -c "import torch; print(torch.cuda.is_available())"`
 
-### 获取支持
-
-- 查看详细文档: `IMPLEMENTATION_GUIDE.md`
-- 查看代码分析: `CODE_ANALYSIS.md`
-- 查看项目规划: `PROJECT_PLAN.md`
-- ROS Wiki: http://wiki.ros.org/
-- PyTorch论坛: https://discuss.pytorch.org/
-
----
-
-## ✨ 总结
-
-这个项目提供了：
-
-✅ **完整的项目规划** - 详细的4阶段实施方案
-✅ **核心算法实现** - 增强特征跟踪、动态物体去除、深度学习回环检测
-✅ **评估框架** - 自动化性能评估和对比工具
-✅ **详细指导** - 代码分析、实现指南、快速教程
-✅ **实验管理** - 系统化的实验跟踪和报告生成
-
-通过系统地完成各个改进模块，预计可以实现 **20-35% 的APE精度提升**。
-
----
-
-**项目版本**: 1.0
-**最后更新**: 2026年1月17日
-**维护者**: SLAM研究团队
 

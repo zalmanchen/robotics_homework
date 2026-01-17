@@ -399,9 +399,11 @@ python scripts/benchmark_suite.py --all --output experiments/
 - [PROJECT_PLAN.md](PROJECT_PLAN.md) - 项目总体规划和时间表
 
 ---
-
-**祝你研究顺利！** 🚀
-
-如有问题，请参考各文档的常见问题解答部分。
-
-*最后更新: 2026年1月17日*
+@inproceedings{lvisam2021shan,
+  title={LVI-SAM: Tightly-coupled Lidar-Visual-Inertial Odometry via Smoothing and Mapping},
+  author={Shan, Tixiao and Englot, Brendan and Ratti, Carlo and Rus Daniela},
+  booktitle={IEEE International Conference on Robotics and Automation (ICRA)},
+  pages={5692-5698},
+  year={2021},
+  organization={IEEE}
+}

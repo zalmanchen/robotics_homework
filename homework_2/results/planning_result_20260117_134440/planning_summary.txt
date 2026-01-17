@@ -1,0 +1,50 @@
+======================================================================
+PATH AND TRAJECTORY PLANNING SUMMARY REPORT
+======================================================================
+
+PLANNING PARAMETERS
+----------------------------------------------------------------------
+Start Position: (2.00, 2.00, 1.00) m
+Goal Position: (17.00, 17.00, 2.00) m
+Environment Size: 20.0m × 20.0m × 5m
+Number of Obstacles: 50 cylinders
+Safety Margin: 0.2m
+
+PATH PLANNING RESULTS (RRT Algorithm)
+----------------------------------------------------------------------
+Number of Waypoints: 59
+Total Path Length: 27.82 m
+Start Point: (2.00, 2.00, 1.00)
+End Point: (16.98, 17.01, 2.06)
+
+TRAJECTORY PLANNING RESULTS (Cubic Spline)
+----------------------------------------------------------------------
+Total Execution Time: 13.91 s
+Total Distance Traveled: 29.24 m
+Average Speed: 2.10 m/s
+Number of Trajectory Points (sampled): 500
+Sampling Rate: 35.9 Hz
+
+OUTPUT FILES
+----------------------------------------------------------------------
+1. path_waypoints.csv
+   - Discrete path waypoints with coordinates
+
+2. 3d_path_with_obstacles.png
+   - 3D visualization of planned path and obstacles
+
+3. trajectory_continuous.csv
+   - Continuous trajectory data (time, x, y, z)
+
+4. waypoints_with_time.csv
+   - Waypoint timing information
+
+5. trajectory_plot.png
+   - Three subplots showing x(t), y(t), z(t) with waypoints overlaid
+
+6. planning_summary.txt
+   - This summary report
+
+======================================================================
+Report Generated: 2026-01-17 13:44:42
+======================================================================
